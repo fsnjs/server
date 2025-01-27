@@ -2,6 +2,9 @@ import Chalk from 'chalk';
 import { isNativeError } from 'util/types';
 import { logPrefix } from './log.js';
 
+/**
+ * Formats the console output to include a timestamp and the Fusion prefix.
+ */
 export function registerFusionLogging() {
     const colorize = (args: any[], colorFn: Function) =>
         args.map(
@@ -38,14 +41,15 @@ export function registerFusionLogging() {
                     logPrefix().toString(),
                     Chalk.red(console.log(arg.stack))
                 );
-            } else {
-                if (typeof arg !== 'object') {
-                    error(logPrefix().toString(), Chalk.red(console.log(arg)));
-                    return;
-                }
-
-                error(arg);
+                return;
             }
+
+            if (typeof arg !== 'object') {
+                error(logPrefix().toString(), Chalk.red(arg));
+                return;
+            }
+
+            error(arg);
         });
     };
 }

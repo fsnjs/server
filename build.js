@@ -6,7 +6,7 @@ import { resolve } from 'path';
 
 /** @typedef {import('./build').NpmConfig} NpmConfig */
 
-spawnSync('tsc', ['-p', 'tsconfig.prod.json'], { stdio: 'inherit' });
+spawnSync('tsc', ['-p', 'tsconfig.json'], { stdio: 'inherit' });
 
 const npmConfig = readNpmConfig();
 delete npmConfig.devDependencies;

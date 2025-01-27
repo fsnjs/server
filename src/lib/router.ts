@@ -1,5 +1,6 @@
 import express from 'express';
 import type {
+    ExitHandler,
     Route,
     RouteHandler,
     RouteMethod,
@@ -16,72 +17,8 @@ export class Router {
 
     constructor(
         public baseUrl = '',
-        public expressApp = express()
+        public expressApp: express.Express
     ) {}
-
-    public listen(
-        hostname: string,
-        port: number,
-        options?: {
-            onExit?: (
-                exitCode: number | string,
-                error?: Error,
-                exit?: boolean
-            ) => void;
-            serveStatic?: {
-                dirPath: string;
-                options?: ServeStaticOptions;
-            };
-        }
-    ) {
-        this.expressApp.use(express.json());
-
-        if (options?.serveStatic) {
-            const { dirPath: serveStaticDirPath, options: serveStaticOptions } =
-                options.serveStatic;
-
-            this.expressApp.use(
-                express.static(
-                    serveStaticDirPath,
-                    serveStaticOptions ?? {
-                        dotfiles: 'ignore',
-                        etag: false,
-                        extensions: [
-                            'html',
-                            'js',
-                            'scss',
-                            'css',
-                            'woff2',
-                            'svg',
-                            'png'
-                        ],
-                        index: false,
-                        maxAge: '1y',
-                        redirect: true
-                    }
-                )
-            );
-            // @ts-ignore
-            expressApp.all('*', (req, res) => {
-                res.status(200).sendFile('/', { root: serveStaticDirPath });
-            });
-        }
-
-        this.routes.forEach((endpoint) => {
-            registerRoute(this.expressApp, endpoint);
-        });
-
-        const appInstance = this.expressApp.listen({ hostname, port }, () => {
-            console.log(
-                chalk.bold.blue(`✨ Fusion is listening on ${hostname}:${port}`)
-            );
-        });
-
-        registerExitHandler(options?.onExit);
-        registerOnExitEvent(() => appInstance.close());
-
-        return appInstance;
-    }
 
     public GET<QP, UP, B, GR>(
         path: string | string[],
@@ -158,5 +95,66 @@ export class Router {
         this.routes.push({ method, path: fullPath, handler, builder });
 
         return this;
+    }
+
+    public listen(
+        hostname: string,
+        port: number,
+        options?: {
+            onExit?: ExitHandler;
+            serveStatic?: {
+                dirPath: string;
+                options?: ServeStaticOptions;
+            };
+        }
+    ) {
+        this.expressApp.use(express.json());
+
+        if (options?.serveStatic) {
+            const { dirPath: serveStaticDirPath, options: serveStaticOptions } =
+                options.serveStatic;
+
+            this.expressApp.use(
+                express.static(
+                    serveStaticDirPath,
+                    serveStaticOptions ?? {
+                        dotfiles: 'ignore',
+                        etag: false,
+                        extensions: [
+                            'html',
+                            'js',
+                            'scss',
+                            'css',
+                            'woff2',
+                            'svg',
+                            'png'
+                        ],
+                        index: false,
+                        maxAge: '1y',
+                        redirect: true
+                    }
+                )
+            );
+
+            // @ts-ignore
+            this.expressApp.all('*', (req, res) => {
+                res.status(200).sendFile('/', { root: serveStaticDirPath });
+            });
+        }
+
+        this.routes.forEach((endpoint) => {
+            registerRoute(this.expressApp, endpoint);
+        });
+
+        const appInstance = this.expressApp.listen({ hostname, port }, () => {
+            console.log(
+                chalk.bold.blue(`✨ Fusion is listening on ${hostname}:${port}`)
+            );
+        });
+
+        registerExitHandler(options?.onExit);
+        registerOnExitEvent(() => appInstance.close());
+
+        return appInstance;
     }
 }

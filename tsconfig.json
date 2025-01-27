@@ -13,6 +13,7 @@
             "node"
         ],
         "sourceMap": true,
+        "declaration": true,
         "removeComments": false,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
